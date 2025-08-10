@@ -12,7 +12,6 @@ on:
           - qa
           - stg
           - prod
-
 jobs:
   setup:
     runs-on: ubuntu-latest
