@@ -1,85 +1,29 @@
 name: Deploy Node.js app to AWS
-
 on:
   push:
-    branches:
-      - main  # Trigger on push to the main branch
   pull_request:
-    branches:
-      - main  # Trigger on pull request to main branch
-
+  workflow_dispatch:
 jobs:
-  build_and_deploy:
-    runs-on: ubuntu-latest  # GitHub Actions runner
-
+  setup:
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+      - name: Build the project
+        run: npm run build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts 
+          
+            
+  
+      
 
-    # Set up AWS credentials from GitHub Secrets
-    - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    # Set up Docker Buildx (for building multi-platform images)
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    # Build Docker image and push to ECR
-    - name: Build Docker image
-      run: |
-        docker build -t ${{ secrets.AWS_ECR_REPOSITORY }} .
         
-    - name: Log in to Amazon ECR
-      run: |
-        aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-
-    - name: Tag Docker image
-      run: |
-        docker tag ${{ secrets.AWS_ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-
-    - name: Push Docker image to ECR
-      run: |
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-
-    # ECS or Elastic Beanstalk Deployment (choose one)
-
-    # Option 1: ECS Fargate Deployment
-    - name: Deploy to ECS Fargate
-      run: |
-        ecs_task_definition=$(aws ecs describe-task-definitions --family-prefix node-aws --query "taskDefinitionArns[0]" --output text)
-        if [ "$ecs_task_definition" == "None" ]; then
-          echo "No previous ECS task definition found. Registering new one."
-          aws ecs register-task-definition \
-            --family node-aws \
-            --network-mode awsvpc \
-            --container-definitions '[{
-              "name": "node-aws",
-              "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest",
-              "essential": true,
-              "portMappings": [{
-                "containerPort": 8000,
-                "hostPort": 8000
-              }]
-            }]'
-        fi
-        # Update ECS service to use the new image
-        aws ecs update-service \
-          --cluster ${{ secrets.AWS_ECS_CLUSTER }} \
-          --service ${{ secrets.AWS_ECS_SERVICE }} \
-          --force-new-deployment
-
-    # Option 2: Elastic Beanstalk Deployment
-    - name: Deploy to Elastic Beanstalk
-      run: |
-        eb init -p docker --region ${{ secrets.AWS_REGION }} node-aws-app
-        eb deploy
-
-    # Option 3: EC2 Deployment (if you use EC2 instead of ECS)
-    # Uncomment if using EC2 and SSH-based deployment
-    # - name: Deploy to EC2
-    #   run: |
-    #     ssh -i ${{ secrets.EC2_KEY_PAIR }} ec2-user@${{ secrets.EC2_PUBLIC_IP }} "docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest && docker run -d -p 8000:8000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ECR_REPOSITORY }}:latest"
