@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - main
   workflow_dispatch:
@@ -15,10 +16,10 @@ on:
         default: 'dev'
         type: choice
         options:
-          - dev
-          - qa
-          - stg
-          - prod
+          - custom-deploy-dev
+          - custom-deploy-qa
+          - custom-deploy-stg
+          - custom-deploy-prod
 
 jobs:
   setup:
@@ -26,23 +27,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '20'
-
       - name: Node version
         run: node --version
-
       - name: NPM version
         run: npm --version
-
       - name: Install dependencies
         run: npm install
-
       - name: Build the project
         run: npm run build
+    
 
   deploy_dev:
     runs-on: ubuntu-latest
