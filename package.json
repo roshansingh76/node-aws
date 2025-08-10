@@ -1,0 +1,29 @@
+{
+  "name": "aws",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx src/index.ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roshansingh76/node-aws.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/roshansingh76/node-aws/issues"
+  },
+  "homepage": "https://github.com/roshansingh76/node-aws#readme",
+  "devDependencies": {
+    "@types/express": "^4.17.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
