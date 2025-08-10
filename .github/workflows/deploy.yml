@@ -50,9 +50,16 @@ jobs:
     if: ${{ github.event.inputs.deploy_to == 'dev' }}
     steps:
       - name: Deploy to AWS Dev
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "Deploying to AWS Dev environment"
-          # Add your AWS deployment commands for Dev environment here
+          # Add your actual deployment commands for Dev environment here
+          aws s3 cp ./dist s3://your-bucket-name --recursive
+          # Or for Elastic Beanstalk:
+          # eb deploy --region $AWS_REGION --profile dev
 
   deploy_qa:
     runs-on: ubuntu-latest
@@ -60,9 +67,16 @@ jobs:
     if: ${{ github.event.inputs.deploy_to == 'qa' }}
     steps:
       - name: Deploy to AWS QA
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "Deploying to AWS QA environment"
-          # Add your AWS deployment commands for QA environment here
+          # Add your actual deployment commands for QA environment here
+          aws s3 cp ./dist s3://your-bucket-name --recursive
+          # Or for Elastic Beanstalk:
+          # eb deploy --region $AWS_REGION --profile qa
 
   deploy_stg:
     runs-on: ubuntu-latest
@@ -70,9 +84,16 @@ jobs:
     if: ${{ github.event.inputs.deploy_to == 'stg' }}
     steps:
       - name: Deploy to AWS Staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "Deploying to AWS Staging environment"
-          # Add your AWS deployment commands for Staging environment here
+          # Add your actual deployment commands for Staging environment here
+          aws s3 cp ./dist s3://your-bucket-name --recursive
+          # Or for Elastic Beanstalk:
+          # eb deploy --region $AWS_REGION --profile stg
 
   deploy_prod:
     runs-on: ubuntu-latest
@@ -80,6 +101,13 @@ jobs:
     if: ${{ github.event.inputs.deploy_to == 'prod' }}
     steps:
       - name: Deploy to AWS Production
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "Deploying to AWS Production environment"
-          # Add your AWS deployment commands for Production environment here
+          # Add your actual deployment commands for Production environment here
+          aws s3 cp ./dist s3://your-bucket-name --recursive
+          # Or for Elastic Beanstalk:
+          # eb deploy --region $AWS_REGION --profile prod
