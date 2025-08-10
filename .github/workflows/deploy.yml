@@ -13,16 +13,15 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '20'
+      - name: Node version
+        run: node --version
+      - name: NPM version
+        run: npm --version
       - name: Install dependencies
         run: npm install
       - name: Build the project
         run: npm run build
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-artifacts 
-          
-            
+
   
       
 
