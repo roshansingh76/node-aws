@@ -1,4 +1,5 @@
 name: Deploy Node.js app to AWS
+
 on:
   workflow_dispatch:
     inputs:
@@ -12,58 +13,67 @@ on:
           - qa
           - stg
           - prod
+
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '20'
+
       - name: Node version
         run: node --version
+
       - name: NPM version
         run: npm --version
+
       - name: Install dependencies
         run: npm install
+
       - name: Build the project
         run: npm run build
 
-  deploy:
+  deploy_dev:
     runs-on: ubuntu-latest
     needs: setup
-    if: ${{ github.event.inputs.deploy_to == 'dev' || github.event.inputs.deploy_to == 'qa' || github.event.inputs.deploy_to == 'stg' || github.event.inputs.deploy_to == 'prod' }}
+    if: ${{ github.event.inputs.deploy_to == 'dev' }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
-      - name: Node version
-        run: node --version
-      - name: NPM version
-        run: npm --version
-      - name: Install dependencies
-        run: npm install
-      - name: Build the project
-        run: npm run build
+      - name: Deploy to AWS Dev
+        run: |
+          echo "Deploying to AWS Dev environment"
+          # Add your AWS deployment commands for Dev environment here
 
-      # Deployment steps based on the environment chosen
-      - name: Deploy to AWS
-        if: ${{ github.event.inputs.deploy_to == 'dev' }}
-        run: echo "Deploying to AWS Dev environment"
-        
-      - name: Deploy to AWS (QA)
-        if: ${{ github.event.inputs.deploy_to == 'qa' }}
-        run: echo "Deploying to AWS QA environment"
+  deploy_qa:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.deploy_to == 'qa' }}
+    steps:
+      - name: Deploy to AWS QA
+        run: |
+          echo "Deploying to AWS QA environment"
+          # Add your AWS deployment commands for QA environment here
 
-      - name: Deploy to AWS (Staging)
-        if: ${{ github.event.inputs.deploy_to == 'stg' }}
-        run: echo "Deploying to AWS Staging environment"
+  deploy_stg:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.deploy_to == 'stg' }}
+    steps:
+      - name: Deploy to AWS Staging
+        run: |
+          echo "Deploying to AWS Staging environment"
+          # Add your AWS deployment commands for Staging environment here
 
-      - name: Deploy to AWS (Production)
-        if: ${{ github.event.inputs.deploy_to == 'prod' }}
-        run: echo "Deploying to AWS Production environment"
+  deploy_prod:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: ${{ github.event.inputs.deploy_to == 'prod' }}
+    steps:
+      - name: Deploy to AWS Production
+        run: |
+          echo "Deploying to AWS Production environment"
+          # Add your AWS deployment commands for Production environment here
