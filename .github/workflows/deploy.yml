@@ -1,5 +1,4 @@
 name: Deploy Node.js app to AWS
-
 on:
   push:
     branches:
@@ -8,20 +7,14 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      deploy_to:
-        description: 'Choose the environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - custom-deploy-dev
-          - custom-deploy-qa
-          - custom-deploy-stg
-          - custom-deploy-prod
-
-jobs:
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  APP_NAME: first-app
+  AWS_ACCOUNT_ID: <your-account-id>
+  AWS_REGION: ${{ secrets.AWS_REGION }} 
+  ECR_REPOSITORY: your-app
+jobs:  
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -31,80 +24,22 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '20'
+      - name: Cache node dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - name: Node version
         run: node --version
-      - name: NPM version
-        run: npm --version
-      - name: Install dependencies
-        run: npm install
-      - name: Build the project
-        run: npm run build
-    
-
-  deploy_dev:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: ${{ github.event.inputs.deploy_to == 'dev' }}
-    steps:
-      - name: Deploy to AWS Dev
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Deploying to AWS Dev environment"
-          # Add your actual deployment commands for Dev environment here
-          aws s3 cp ./dist s3://your-bucket-name --recursive
-          # Or for Elastic Beanstalk:
-          # eb deploy --region $AWS_REGION --profile dev
-
-  deploy_qa:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: ${{ github.event.inputs.deploy_to == 'qa' }}
-    steps:
-      - name: Deploy to AWS QA
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Deploying to AWS QA environment"
-          # Add your actual deployment commands for QA environment here
-          aws s3 cp ./dist s3://your-bucket-name --recursive
-          # Or for Elastic Beanstalk:
-          # eb deploy --region $AWS_REGION --profile qa
-
-  deploy_stg:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: ${{ github.event.inputs.deploy_to == 'stg' }}
-    steps:
-      - name: Deploy to AWS Staging
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Deploying to AWS Staging environment"
-          # Add your actual deployment commands for Staging environment here
-          aws s3 cp ./dist s3://your-bucket-name --recursive
-          # Or for Elastic Beanstalk:
-          # eb deploy --region $AWS_REGION --profile stg
-
-  deploy_prod:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: ${{ github.event.inputs.deploy_to == 'prod' }}
-    steps:
-      - name: Deploy to AWS Production
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Deploying to AWS Production environment"
-          # Add your actual deployment commands for Production environment here
-          aws s3 cp ./dist s3://your-bucket-name --recursive
-          # Or for Elastic Beanstalk:
-          # eb deploy --region $AWS_REGION --profile prod
+      - name: Docker version
+        run: docker --version
+      - name: Build Docker image
+        run: docker build -t $APP_NAME:${{ github.sha }} .
+      - name: Login to Docker Hub
+        run: echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USERNAME --password-stdin
+      - name: Tag Docker image
+        run: docker tag $APP_NAME:${{ github.sha }} $DOCKER_USERNAME/$APP_NAME:${{ github.sha }}
+      - name: Push Docker image to Docker Hub
+        run: docker push $DOCKER_USERNAME/$APP_NAME:${{ github.sha }}
