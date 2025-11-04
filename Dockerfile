@@ -20,6 +20,6 @@ COPY --from=builder /var/www/html/node-aws/dist ./dist
 
 RUN npm install --only=production
 
-EXPOSE 8000
+EXPOSE 8585
 
 CMD ["node", "dist/index.js"]
