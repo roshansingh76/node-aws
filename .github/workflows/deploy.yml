@@ -56,14 +56,20 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/$APP_NAME:${{ github.sha }}
 
-      - name: Deploy to Hostinger VPS
-        uses: appleboy/ssh-action@v1.1.0
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_PRIVATE_KEY }}
+          port: 22
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/$APP_NAME:${{ github.sha }}
-            docker stop $APP_NAME || true
-            docker rm $APP_NAME || true
-            docker run -d --name $APP_NAME -p 8585:8585 ${{ secrets.DOCKER_USERNAME }}/$APP_NAME:${{ github.sha }}
+            cd /var/www/html/node-aws
+
+            # Pull latest image from Docker Hub
+            docker compose pull
+            # Restart containers with new image
+            docker compose up -d --remove-orphans
+
+            # Optionally prune unused images
+            docker image prune -f
